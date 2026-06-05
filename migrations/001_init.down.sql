@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS idx_tasks_on_users;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS users;
+DROP TYPE IF EXISTS task_status;
+DROP EXTENSION IF EXISTS "uuid-ossp";
