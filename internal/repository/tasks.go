@@ -68,3 +68,23 @@ func (r *TaskRepository) GetAllByUser(ctx context.Context, userID uuid.UUID) ([]
 
 	return t, err
 }
+
+func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	sql := `
+	DELETE FROM tasks
+	WHERE id = $1;
+	`
+	_, err := r.conn.Exec(ctx, sql, id)
+	
+	return err
+}
+
+func (r *TaskRepository) Update(ctx context.Context, task models.Task) error {
+	sql := `
+	UPDATE tasks
+	SET name = $1, status = $2, description = $3, updated_at = NOW()
+	WHERE id = $4
+	`
+	_, err := r.conn.Exec(ctx, sql, task.Name, task.Status, task.Description, task.ID)
+	return err
+}

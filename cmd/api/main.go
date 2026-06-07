@@ -11,6 +11,6 @@ func main() {
 	godotenv.Load()
 	ctx := context.Background()
 
-	conn := db.ConncectDB(ctx)
+	conn := db.ConnectDB(ctx)
 	defer conn.Close(ctx)
 }
