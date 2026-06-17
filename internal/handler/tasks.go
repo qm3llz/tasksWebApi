@@ -10,11 +10,11 @@ import (
 )
 
 type TaskHandler struct {
-	repo repository.TaskRepository
+	repo *repository.TaskRepository
 }
 
 // NewTaskHandler
-func (t *TaskHandler) NewTaskHandler(repo repository.TaskRepository) *TaskHandler {
+func NewTaskHandler(repo *repository.TaskRepository) *TaskHandler {
 	return &TaskHandler{repo: repo}
 }
 
@@ -39,6 +39,26 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func (t *TaskHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	var task models.Task
+	json.NewDecoder(r.Body).Decode(&task)
+
+	task, err := t.repo.GetByID(r.Context(), task.ID)
+	if err != nil {
+		http.Error(w, "ID not found", http.StatusNotFound)
+		return
+	}
+
+	response := map[string]any{
+		"status": "success",
+		"task":   task,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
 // GetAllByUser
 func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -58,6 +78,56 @@ func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
 		"message": "getted",
 		"tasks":   tasks,
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	var task models.Task
+
+	json.NewDecoder(r.Body).Decode(&task)
+
+	err := t.repo.Delete(r.Context(), task.ID)
+	if err != nil {
+		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{
+		"status":  "success",
+		"message": "task deleted (or the task does not exist)",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
+	var task models.Task
+
+	json.NewDecoder(r.Body).Decode(&task)
+
+	err := t.repo.Update(r.Context(), task)
+	if err != nil {
+		http.Error(w, "BadRequest", http.StatusBadRequest)
+		return
+	}
+
+	newTask, err := t.repo.GetByID(r.Context(), task.ID)
+	if err != nil {
+		http.Error(w, "ID not found", http.StatusNotFound)
+		return
+	}
+
+	response := map[string]any{
+		"status":  "success",
+		"message": "task updated",
+		"task":    newTask,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
