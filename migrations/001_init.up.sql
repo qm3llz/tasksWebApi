@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE task_status AS ENUM ('Не выполнено', 'Выполняется', 'Выполнено');
+CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'done');
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
