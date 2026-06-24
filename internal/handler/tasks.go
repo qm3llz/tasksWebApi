@@ -1,20 +1,28 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/qm3llz/tasksWebApi/internal/models"
-	"github.com/qm3llz/tasksWebApi/internal/repository"
 )
 
+type TaskRepo interface {
+	Create(ctx context.Context, task models.Task) error
+	GetByID(ctx context.Context, id uuid.UUID) (models.Task, error)
+	GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models.Task, error)
+	Delete(ctx context.Context, id uuid.UUID) error
+	Update(ctx context.Context, task models.Task) error
+}
+
 type TaskHandler struct {
-	repo *repository.TaskRepository
+	repo TaskRepo
 }
 
 // NewTaskHandler
-func NewTaskHandler(repo *repository.TaskRepository) *TaskHandler {
+func NewTaskHandler(repo TaskRepo) *TaskHandler {
 	return &TaskHandler{repo: repo}
 }
 
