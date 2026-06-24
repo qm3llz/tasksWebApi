@@ -25,10 +25,10 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Post("/tasks", h.Create)
-	r.Get("/tasks", h.GetAllByUser)
 	r.Get("/tasks/{id}", h.GetById)
-	r.Put("/tasks/{id}", h.Update)
+	r.Get("/tasks", h.GetAllByUser)
 	r.Delete("/tasks/{id}", h.Delete)
+	r.Put("/tasks/{id}", h.Update)
 
 	http.ListenAndServe(":8080", r)
 }
