@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ConncectDB(ctx context.Context) *pgx.Conn {
+func ConnectDB(ctx context.Context) *pgx.Conn {
 	dsn := os.Getenv("DATABASE_URL")
 
 	conn, err := pgx.Connect(ctx, dsn)
