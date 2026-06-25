@@ -33,7 +33,7 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&task)
 	err := t.repo.Create(r.Context(), task)
 	if err != nil {
-		http.Error(w, "BadRequest", http.StatusBadRequest)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
