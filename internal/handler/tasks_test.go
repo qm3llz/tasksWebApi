@@ -28,7 +28,8 @@ func (f *fakeRepo) GetByID(ctx context.Context, id uuid.UUID) (models.Task, erro
 }
 
 func (f *fakeRepo) GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models.Task, error) {
-	return nil, f.err
+	tasks := []models.Task{f.task}
+	return tasks, f.err
 }
 
 func (f *fakeRepo) Delete(ctx context.Context, id uuid.UUID) error {
@@ -100,6 +101,94 @@ func TestGetById(t *testing.T) {
 
 			if rec.Code != tc.wantStatus {
 				t.Errorf("\"%s\"wait %d, get %d", tc.name, tc.wantStatus, rec.Code)
+			}
+		})
+	}
+}
+
+func TestGetAllByUser(t *testing.T) {
+	test := []struct {
+		name       string
+		repoErr    error
+		wantStatus int
+	}{
+		{name: "succes", repoErr: nil, wantStatus: http.StatusOK},
+		{name: "", repoErr: errors.New("Status Internal Server Error"), wantStatus: http.StatusInternalServerError},
+	}
+
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
+			h := NewTaskHandler(repo)
+
+			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
+			req := httptest.NewRequest(http.MethodGet, "/tasks/1", body)
+
+			rec := httptest.NewRecorder()
+
+			h.Delete(rec, req)
+
+			if rec.Code != tc.wantStatus {
+				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)
+			}
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	test := []struct {
+		name       string
+		repoErr    error
+		wantStatus int
+	}{
+		{name: "succes", repoErr: nil, wantStatus: 200},
+		{name: "Server error", repoErr: errors.New("Status Internal Server Error"), wantStatus: 500},
+	}
+
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
+			h := NewTaskHandler(repo)
+
+			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
+			req := httptest.NewRequest(http.MethodDelete, "/tasks/1", body)
+
+			rec := httptest.NewRecorder()
+
+			h.Delete(rec, req)
+
+			if rec.Code != tc.wantStatus {
+				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)
+			}
+		})
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	test := []struct {
+		name       string
+		repoErr    error
+		wantStatus int
+	}{
+		{name: "succes", repoErr: nil, wantStatus: 200},
+		// {name: "BadRequest", repoErr: errors.New("BadRequest"), wantStatus: 400}, // TODO: update mock for test
+		{name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404},
+	}
+
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
+			h := NewTaskHandler(repo)
+
+			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
+			req := httptest.NewRequest(http.MethodPut, "/tasks/1", body)
+
+			rec := httptest.NewRecorder()
+
+			h.Update(rec, req)
+
+			if rec.Code != tc.wantStatus {
+				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)
 			}
 		})
 	}
