@@ -25,7 +25,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Post("/tasks", h.Create)
-	r.Get("/tasks/{id}", h.GetById)
+	r.Get("/tasks/{id}", h.GetByID)
 	r.Get("/tasks", h.GetAllByUser)
 	r.Delete("/tasks/{id}", h.Delete)
 	r.Put("/tasks/{id}", h.Update)
