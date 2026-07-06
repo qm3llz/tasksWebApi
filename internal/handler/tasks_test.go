@@ -97,7 +97,7 @@ func TestGetById(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/tasks/11111111-1111-4111-1111-111111111111", nil)
 
 			r := chi.NewRouter()
-			r.Get("/tasks/{id}", h.GetById)
+			r.Get("/tasks/{id}", h.GetByID)
 
 			rec := httptest.NewRecorder()
 			r.ServeHTTP(rec, req)
@@ -116,7 +116,7 @@ func TestGetAllByUser(t *testing.T) {
 		wantStatus int
 	}{
 		{name: "succes", repoErr: nil, wantStatus: http.StatusOK},
-		{name: "", repoErr: errors.New("BadRequest"), wantStatus: http.StatusBadRequest},
+		{name: "Bad Request", repoErr: errors.New("BadRequest"), wantStatus: http.StatusBadRequest},
 	}
 
 	for _, tc := range test {
@@ -176,8 +176,8 @@ func TestUpdate(t *testing.T) {
 		wantStatus int
 	}{
 		{name: "succes", repoErr: nil, wantStatus: 200},
-		{name: "BadRequest", repoErr: errors.New("BadRequest"), wantStatus: 400}, // TODO: update mock for test
-		// {name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404},
+		{name: "Status Internal Server Error", repoErr: errors.New("StatusInternalServerError"), wantStatus: 500},
+		// {name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404}, // TODO: update mock for test
 	}
 
 	for _, tc := range test {

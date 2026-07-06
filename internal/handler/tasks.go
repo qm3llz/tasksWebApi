@@ -48,7 +48,7 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (t *TaskHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (t *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 
 	taskID, err := uuid.Parse(idStr)
@@ -130,7 +130,7 @@ func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	err := t.repo.Update(r.Context(), task)
 	if err != nil {
-		http.Error(w, "BadRequest", http.StatusBadRequest)
+		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
