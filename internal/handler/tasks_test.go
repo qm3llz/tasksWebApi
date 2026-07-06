@@ -16,8 +16,9 @@ import (
 )
 
 type fakeRepo struct {
-	task models.Task
-	err  error
+	task       models.Task
+	err        error
+	getByIDErr error
 }
 
 func (f *fakeRepo) Create(ctx context.Context, task models.Task) error {
@@ -25,6 +26,9 @@ func (f *fakeRepo) Create(ctx context.Context, task models.Task) error {
 }
 
 func (f *fakeRepo) GetByID(ctx context.Context, id uuid.UUID) (models.Task, error) {
+	if f.getByIDErr != nil {
+		return models.Task{}, f.getByIDErr
+	}
 	return f.task, f.err
 }
 
@@ -173,16 +177,17 @@ func TestUpdate(t *testing.T) {
 	test := []struct {
 		name       string
 		repoErr    error
+		getByIDErr error
 		wantStatus int
 	}{
 		{name: "succes", repoErr: nil, wantStatus: 200},
 		{name: "Status Internal Server Error", repoErr: errors.New("StatusInternalServerError"), wantStatus: 500},
-		// {name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404}, // TODO: update mock for test
+		{name: "ID not found", repoErr: nil, wantStatus: 404, getByIDErr: errors.New("ID not found")},
 	}
 
 	for _, tc := range test {
 		t.Run(tc.name, func(t *testing.T) {
-			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
+			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr, getByIDErr: tc.getByIDErr}
 			h := NewTaskHandler(repo)
 
 			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
