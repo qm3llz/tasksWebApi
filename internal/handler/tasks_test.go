@@ -41,7 +41,7 @@ func (f *fakeRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return f.err
 }
 
-func (f *fakeRepo) Update(ctx context.Context, task models.Task) error {
+func (f *fakeRepo) Update(ctx context.Context, task models.Task, id uuid.UUID) error {
 	return f.err
 }
 
@@ -190,12 +190,16 @@ func TestUpdate(t *testing.T) {
 			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr, getByIDErr: tc.getByIDErr}
 			h := NewTaskHandler(repo)
 
-			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
-			req := httptest.NewRequest(http.MethodPut, "/tasks/1", body)
+			body := strings.NewReader(`{"name":"Update Name"}`)
+			req := httptest.NewRequest(http.MethodPut, "/tasks/11111111-1111-4111-1111-111111111111", body)
 
+
+			r := chi.NewRouter()
+			r.Put("/tasks/{id}", h.Update)
+			
 			rec := httptest.NewRecorder()
 
-			h.Update(rec, req)
+			r.ServeHTTP(rec, req)
 
 			if rec.Code != tc.wantStatus {
 				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)

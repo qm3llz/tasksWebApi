@@ -15,7 +15,7 @@ type TaskRepo interface {
 	GetByID(ctx context.Context, id uuid.UUID) (models.Task, error)
 	GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models.Task, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	Update(ctx context.Context, task models.Task) error
+	Update(ctx context.Context, task models.Task, id uuid.UUID) error
 }
 
 type TaskHandler struct {
@@ -100,7 +100,7 @@ func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
 
 func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
-	
+
 	taskID, err := uuid.Parse(idStr)
 	if err != nil {
 		http.Error(w, "Invalid  task ID format", http.StatusBadRequest)
@@ -124,11 +124,18 @@ func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+	StrID := chi.URLParam(r, "id")
 
+	ID, err := uuid.Parse(StrID)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	var task models.Task
 	json.NewDecoder(r.Body).Decode(&task)
 
-	err := t.repo.Update(r.Context(), task)
+	err = t.repo.Update(r.Context(), task, ID)
 	if err != nil {
 		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
 		return
