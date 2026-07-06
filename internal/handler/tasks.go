@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/qm3llz/tasksWebApi/internal/models"
 )
@@ -48,12 +49,17 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TaskHandler) GetById(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
-	json.NewDecoder(r.Body).Decode(&task)
+	idStr := chi.URLParam(r, "id")
 
-	task, err := t.repo.GetByID(r.Context(), task.ID)
+	taskID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "ID not found", http.StatusNotFound)
+		http.Error(w, "Invalid  task ID format", http.StatusBadRequest)
+		return
+	}
+
+	task, err := t.repo.GetByID(r.Context(), taskID)
+	if err != nil {
+		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
@@ -93,11 +99,15 @@ func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+	idStr := chi.URLParam(r, "id")
+	
+	taskID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid  task ID format", http.StatusBadRequest)
+		return
+	}
 
-	json.NewDecoder(r.Body).Decode(&task)
-
-	err := t.repo.Delete(r.Context(), task.ID)
+	err = t.repo.Delete(r.Context(), taskID)
 	if err != nil {
 		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
 		return

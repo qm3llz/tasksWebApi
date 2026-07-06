@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/qm3llz/tasksWebApi/internal/models"
 )
@@ -93,11 +94,13 @@ func TestGetById(t *testing.T) {
 			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
 			h := NewTaskHandler(repo)
 
-			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
-			req := httptest.NewRequest(http.MethodGet, "/tasks", body)
+			req := httptest.NewRequest(http.MethodGet, "/tasks/11111111-1111-4111-1111-111111111111", nil)
+
+			r := chi.NewRouter()
+			r.Get("/tasks/{id}", h.GetById)
 
 			rec := httptest.NewRecorder()
-			h.GetById(rec, req)
+			r.ServeHTTP(rec, req)
 
 			if rec.Code != tc.wantStatus {
 				t.Errorf("\"%s\"wait %d, get %d", tc.name, tc.wantStatus, rec.Code)
@@ -113,7 +116,7 @@ func TestGetAllByUser(t *testing.T) {
 		wantStatus int
 	}{
 		{name: "succes", repoErr: nil, wantStatus: http.StatusOK},
-		{name: "", repoErr: errors.New("Status Internal Server Error"), wantStatus: http.StatusInternalServerError},
+		{name: "", repoErr: errors.New("BadRequest"), wantStatus: http.StatusBadRequest},
 	}
 
 	for _, tc := range test {
@@ -126,7 +129,7 @@ func TestGetAllByUser(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 
-			h.Delete(rec, req)
+			h.GetAllByUser(rec, req)
 
 			if rec.Code != tc.wantStatus {
 				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)
@@ -150,12 +153,14 @@ func TestDelete(t *testing.T) {
 			repo := &fakeRepo{task: models.Task{Name: tc.name}, err: tc.repoErr}
 			h := NewTaskHandler(repo)
 
-			body := strings.NewReader(`{"id":"11111111-1111-4111-1111-111111111111"}`)
-			req := httptest.NewRequest(http.MethodDelete, "/tasks/1", body)
+			req := httptest.NewRequest(http.MethodDelete, "/tasks/11111111-1111-4111-1111-111111111111", nil)
+
+			r := chi.NewRouter()
+			r.Delete("/tasks/{id}", h.Delete)
 
 			rec := httptest.NewRecorder()
 
-			h.Delete(rec, req)
+			r.ServeHTTP(rec, req)
 
 			if rec.Code != tc.wantStatus {
 				t.Errorf("\"%s\": wait: %d, get: %d", tc.name, tc.wantStatus, rec.Code)
@@ -171,8 +176,8 @@ func TestUpdate(t *testing.T) {
 		wantStatus int
 	}{
 		{name: "succes", repoErr: nil, wantStatus: 200},
-		// {name: "BadRequest", repoErr: errors.New("BadRequest"), wantStatus: 400}, // TODO: update mock for test
-		{name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404},
+		{name: "BadRequest", repoErr: errors.New("BadRequest"), wantStatus: 400}, // TODO: update mock for test
+		// {name: "ID not found", repoErr: errors.New("ID not found"), wantStatus: 404},
 	}
 
 	for _, tc := range test {
