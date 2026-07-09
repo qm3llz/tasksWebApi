@@ -13,7 +13,7 @@ CREATE TABLE tasks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(150) NOT NULL,
-  status task_status NOT NULL DEFAULT "Не выполнено",
+  status task_status NOT NULL DEFAULT "todo",
   description TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
