@@ -32,6 +32,14 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 
 	json.NewDecoder(r.Body).Decode(&task)
+
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	task.UserID = userID
+
 	err := t.repo.Create(r.Context(), task)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
