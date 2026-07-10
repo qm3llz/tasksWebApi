@@ -12,9 +12,9 @@ import (
 
 type TaskRepo interface {
 	Create(ctx context.Context, task models.Task) error
-	GetByID(ctx context.Context, id uuid.UUID) (models.Task, error)
+	GetByID(ctx context.Context, id, userID uuid.UUID) (models.Task, error)
 	GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models.Task, error)
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
 	Update(ctx context.Context, task models.Task, id uuid.UUID) error
 }
 
@@ -65,7 +65,14 @@ func (t *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := t.repo.GetByID(r.Context(), taskID)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	
+	task, err := t.repo.GetByID(r.Context(), taskID, userID)
 	if err != nil {
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
@@ -83,13 +90,13 @@ func (t *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // GetAllByUser
 func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		UserID uuid.UUID `json:"user_id"`
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&body)
-
-	tasks, err := t.repo.GetAllByUser(r.Context(), body.UserID)
+	tasks, err := t.repo.GetAllByUser(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "BadRequest", http.StatusBadRequest)
 		return
@@ -115,7 +122,13 @@ func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.repo.Delete(r.Context(), taskID)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err = t.repo.Delete(r.Context(), taskID, userID)
 	if err != nil {
 		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
 		return
@@ -140,8 +153,15 @@ func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+ 
 	var task models.Task
 	json.NewDecoder(r.Body).Decode(&task)
+	task.UserID = userID
 
 	err = t.repo.Update(r.Context(), task, ID)
 	if err != nil {
@@ -149,7 +169,7 @@ func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newTask, err := t.repo.GetByID(r.Context(), task.ID)
+	newTask, err := t.repo.GetByID(r.Context(), task.ID, task.UserID)
 	if err != nil {
 		http.Error(w, "ID not found", http.StatusNotFound)
 		return

@@ -26,14 +26,14 @@ func (r *TaskRepository) Create(ctx context.Context, task models.Task) error {
 	return err
 }
 
-func (r *TaskRepository) GetByID(ctx context.Context, id uuid.UUID) (models.Task, error) {
+func (r *TaskRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (models.Task, error) {
 	var t models.Task
 
 	sql := `
 	SELECT id, user_id, name, status, description, created_at, updated_at FROM tasks
-	WHERE id = $1;
+	WHERE id = $1 and user_id = $2;
 	`
-	err := r.conn.QueryRow(ctx, sql, id).Scan(&t.ID, &t.UserID, &t.Name, &t.Status, &t.Description, &t.CreatedAt, &t.UpdatedAt)
+	err := r.conn.QueryRow(ctx, sql, id, userID).Scan(&t.ID, &t.UserID, &t.Name, &t.Status, &t.Description, &t.CreatedAt, &t.UpdatedAt)
 
 	return t, err
 }
@@ -69,12 +69,12 @@ func (r *TaskRepository) GetAllByUser(ctx context.Context, userID uuid.UUID) ([]
 	return t, err
 }
 
-func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *TaskRepository) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	sql := `
 	DELETE FROM tasks
-	WHERE id = $1;
+	WHERE id = $1 AND user_id = $2;
 	`
-	_, err := r.conn.Exec(ctx, sql, id)
+	_, err := r.conn.Exec(ctx, sql, id, userID)
 
 	return err
 }
@@ -83,8 +83,8 @@ func (r *TaskRepository) Update(ctx context.Context, task models.Task, id uuid.U
 	sql := `
 	UPDATE tasks
 	SET name = $1, status = $2, description = $3, updated_at = NOW()
-	WHERE id = $4
+	WHERE id = $4 and user_id = $5
 	`
-	_, err := r.conn.Exec(ctx, sql, task.Name, task.Status, task.Description, id)
+	_, err := r.conn.Exec(ctx, sql, task.Name, task.Status, task.Description, id, task.UserID)
 	return err
 }

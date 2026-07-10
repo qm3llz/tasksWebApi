@@ -25,7 +25,7 @@ func (f *fakeRepo) Create(ctx context.Context, task models.Task) error {
 	return f.err
 }
 
-func (f *fakeRepo) GetByID(ctx context.Context, id uuid.UUID) (models.Task, error) {
+func (f *fakeRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (models.Task, error) {
 	if f.getByIDErr != nil {
 		return models.Task{}, f.getByIDErr
 	}
@@ -37,7 +37,7 @@ func (f *fakeRepo) GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models
 	return tasks, f.err
 }
 
-func (f *fakeRepo) Delete(ctx context.Context, id uuid.UUID) error {
+func (f *fakeRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	return f.err
 }
 
@@ -196,7 +196,7 @@ func TestUpdate(t *testing.T) {
 
 			r := chi.NewRouter()
 			r.Put("/tasks/{id}", h.Update)
-			
+
 			rec := httptest.NewRecorder()
 
 			r.ServeHTTP(rec, req)

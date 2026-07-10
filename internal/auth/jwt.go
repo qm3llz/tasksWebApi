@@ -8,7 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
-var jwtSecret =  []byte(os.Getenv("JWT_SECRET"))
+func jwtSecret() []byte {
+	return []byte(os.Getenv("JWT_SECRET"))
+}
 
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
@@ -23,7 +25,7 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(jwtSecret())
 }
 
 
@@ -31,7 +33,7 @@ func ParseToken(tokenStr string) (*Claims, error) {
 	claims := &Claims{}
 
 	_, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
-		return jwtSecret, nil
+		return jwtSecret(), nil
 	})
 	if err != nil {
 		return nil, err
