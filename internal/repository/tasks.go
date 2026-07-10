@@ -79,12 +79,12 @@ func (r *TaskRepository) Delete(ctx context.Context, id, userID uuid.UUID) error
 	return err
 }
 
-func (r *TaskRepository) Update(ctx context.Context, task models.Task, id uuid.UUID) error {
+func (r *TaskRepository) Update(ctx context.Context, task models.Task) error {
 	sql := `
 	UPDATE tasks
 	SET name = $1, status = $2, description = $3, updated_at = NOW()
 	WHERE id = $4 and user_id = $5
 	`
-	_, err := r.conn.Exec(ctx, sql, task.Name, task.Status, task.Description, id, task.UserID)
+	_, err := r.conn.Exec(ctx, sql, task.Name, task.Status, task.Description, task.ID, task.UserID)
 	return err
 }

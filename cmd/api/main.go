@@ -36,7 +36,7 @@ func main() {
 
 		r.Post("/tasks", th.Create)
 		r.Get("/tasks/{id}", th.GetByID)
-		r.Get("/tasks", th.GetAllByUser)
+		r.Get("/tasks", th.GetAllByUser)	
 		r.Delete("/tasks/{id}", th.Delete)
 		r.Put("/tasks/{id}", th.Update)
 	})

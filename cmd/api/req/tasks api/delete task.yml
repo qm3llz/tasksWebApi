@@ -1,0 +1,20 @@
+info:
+  name: delete task
+  type: http
+  seq: 7
+
+http:
+  method: DELETE
+  url: http://localhost:8080/tasks/759b53b1-17ee-4347-87e0-c1c3865218a3
+  body:
+    type: json
+    data: ""
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOWI4YjE3MDAtZDNiYi00YjY5LTkwNjMtYjJmNDVkMzRmZjk4IiwiZXhwIjoxNzgzNzc3ODYxfQ.yn6bx454PCCPOdnLbbAJuN2LWyPG6Fb2sjD9m0iEQfQ
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

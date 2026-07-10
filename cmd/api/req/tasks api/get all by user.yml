@@ -1,0 +1,20 @@
+info:
+  name: get all by user
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: http://localhost:8080/tasks
+  body:
+    type: json
+    data: ""
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOWI4YjE3MDAtZDNiYi00YjY5LTkwNjMtYjJmNDVkMzRmZjk4IiwiZXhwIjoxNzgzNzc3ODYxfQ.yn6bx454PCCPOdnLbbAJuN2LWyPG6Fb2sjD9m0iEQfQ
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
