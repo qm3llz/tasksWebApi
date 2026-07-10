@@ -1,20 +1,29 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/qm3llz/tasksWebApi/internal/models"
-	"github.com/qm3llz/tasksWebApi/internal/repository"
 )
 
+type TaskRepo interface {
+	Create(ctx context.Context, task models.Task) error
+	GetByID(ctx context.Context, id, userID uuid.UUID) (models.Task, error)
+	GetAllByUser(ctx context.Context, userID uuid.UUID) ([]models.Task, error)
+	Delete(ctx context.Context, id, userID uuid.UUID) error
+	Update(ctx context.Context, task models.Task, id uuid.UUID) error
+}
+
 type TaskHandler struct {
-	repo *repository.TaskRepository
+	repo TaskRepo
 }
 
 // NewTaskHandler
-func NewTaskHandler(repo *repository.TaskRepository) *TaskHandler {
+func NewTaskHandler(repo TaskRepo) *TaskHandler {
 	return &TaskHandler{repo: repo}
 }
 
@@ -23,9 +32,17 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 
 	json.NewDecoder(r.Body).Decode(&task)
+
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	task.UserID = userID
+
 	err := t.repo.Create(r.Context(), task)
 	if err != nil {
-		http.Error(w, "BadRequest", http.StatusBadRequest)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -39,13 +56,25 @@ func (t *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (t *TaskHandler) GetById(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
-	json.NewDecoder(r.Body).Decode(&task)
+func (t *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
 
-	task, err := t.repo.GetByID(r.Context(), task.ID)
+	taskID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "ID not found", http.StatusNotFound)
+		http.Error(w, "Invalid  task ID format", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	
+	task, err := t.repo.GetByID(r.Context(), taskID, userID)
+	if err != nil {
+		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
@@ -61,13 +90,13 @@ func (t *TaskHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 // GetAllByUser
 func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		UserID uuid.UUID `json:"user_id"`
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&body)
-
-	tasks, err := t.repo.GetAllByUser(r.Context(), body.UserID)
+	tasks, err := t.repo.GetAllByUser(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "BadRequest", http.StatusBadRequest)
 		return
@@ -85,11 +114,21 @@ func (t *TaskHandler) GetAllByUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+	idStr := chi.URLParam(r, "id")
 
-	json.NewDecoder(r.Body).Decode(&task)
+	taskID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid  task ID format", http.StatusBadRequest)
+		return
+	}
 
-	err := t.repo.Delete(r.Context(), task.ID)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err = t.repo.Delete(r.Context(), taskID, userID)
 	if err != nil {
 		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
 		return
@@ -106,17 +145,31 @@ func (t *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+	StrID := chi.URLParam(r, "id")
 
-	json.NewDecoder(r.Body).Decode(&task)
-
-	err := t.repo.Update(r.Context(), task)
+	ID, err := uuid.Parse(StrID)
 	if err != nil {
-		http.Error(w, "BadRequest", http.StatusBadRequest)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	newTask, err := t.repo.GetByID(r.Context(), task.ID)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+ 
+	var task models.Task
+	json.NewDecoder(r.Body).Decode(&task)
+	task.UserID = userID
+
+	err = t.repo.Update(r.Context(), task, ID)
+	if err != nil {
+		http.Error(w, "Status Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	newTask, err := t.repo.GetByID(r.Context(), task.ID, task.UserID)
 	if err != nil {
 		http.Error(w, "ID not found", http.StatusNotFound)
 		return

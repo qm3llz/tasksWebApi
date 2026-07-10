@@ -1,3 +1,4 @@
+// Package models 
 package models
 
 import (
@@ -9,9 +10,9 @@ import (
 type TaskStatus string
 
 const (
-	StatusTodo       TaskStatus = "Не выполнено"
-	StatusInProgress TaskStatus = "Выполняется"
-	StatusDone       TaskStatus = "Выполнено"
+	StatusTodo       TaskStatus = "todo"
+	StatusInProgress TaskStatus = "in_progress"
+	StatusDone       TaskStatus = "done"
 )
 
 type User struct {
