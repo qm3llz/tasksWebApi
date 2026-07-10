@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -28,11 +29,14 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 	return token.SignedString(jwtSecret())
 }
 
-
 func ParseToken(tokenStr string) (*Claims, error) {
 	claims := &Claims{}
 
 	_, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, errors.New("unexpected signing method")
+		}
 		return jwtSecret(), nil
 	})
 	if err != nil {
